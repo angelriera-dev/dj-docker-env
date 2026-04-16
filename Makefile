@@ -1,16 +1,18 @@
 
-
-SHELL := /bin/sh
-
-.PHONY: dev temp
+start:
+	@docker compose --project-name django-app up -d --build  
 
 dev:
-	@docker compose up -d --build
+	@if docker compose ps --status running --services | grep -q "^app$$"; then \
+		echo "Development container already running."; \
+	else \
+		echo "Starting development containers..."; \
+		docker compose --project-name django-app up -d --build;  \
+	fi 
+	@docker compose exec app bash
 
 clear:
 	@docker compose down
 
-
 temp:
-	@tty_flag=""; if [ -t 0 ]; then tty_flag="-t"; fi; \
-	docker run -i $$tty_flag --rm -v "$(PWD):/app" -w /app --name my-dev-container python:bullseye bash
+	@docker run -it --rm -v .:/app -w /app  python:slim /bin/bash -c "adduser --disabled-password --gecos '' --uid 1000 devuser && su devuser"
